@@ -18,11 +18,11 @@ async def lifespan(app: FastAPI):
 # 2. Instantiate the FastAPI Engine
 app = FastAPI(title="My React-FastAPI App", lifespan=lifespan)
 
-# 3. Configure Cross-Origin Resource Sharing (CORS) 
-# This opens a secure bridge so your running Vite Frontend (Port 5173) can request data
+# 3. Configure Cross-Origin Resource Sharing (CORS)
+# This allows the local Vite frontend and the deployed production frontend to access the API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"], 
+    allow_origins=settings.allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

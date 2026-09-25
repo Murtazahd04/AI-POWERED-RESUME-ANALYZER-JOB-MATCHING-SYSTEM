@@ -50,7 +50,7 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 | ✓ | Test MongoDB | Insert and retrieve test data. |
 | ✓ | Test Cloudinary | Upload and retrieve a test file. |
 | ✓ | Test Resume Upload Flow | Verify React → FastAPI → Cloudinary. |
-| ☐ | Configure Git Workflow | Establish branch, commit and push workflow. |
+| ✓ | Configure Git Workflow | Establish branch, commit and push workflow. |
 | ☐ | Deploy Frontend | Deploy the React application to Vercel. |
 | ☐ | Deploy Backend | Deploy the FastAPI backend to Render. |
 | ☐ | Configure Production Variables | Add required environment variables to Vercel \+ Render. |
