@@ -22,4 +22,6 @@ services:
       - key: PYTHON_VERSION
         value: "3.13"
       - key: FRONTEND_URL
-        sync: false
+        value: https://data-science-project-600u50ef6-murtaza231411it-2012.vercel.app
+      - key: BACKEND_CORS_ORIGINS
+        value: http://localhost:5173,http://127.0.0.1:5173,https://data-science-project-600u50ef6-murtaza231411it-2012.vercel.app
