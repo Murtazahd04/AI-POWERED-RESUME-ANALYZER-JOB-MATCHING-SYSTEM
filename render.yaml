@@ -3,7 +3,7 @@ services:
     name: ai-resume-analyzer-api
     env: python
     plan: free
-    rootDir: backend 
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -19,5 +19,7 @@ services:
         sync: false
       - key: AI_MODEL_NAME
         value: gemini-2.5-flash
+      - key: PYTHON_VERSION
+        value: "3.13"
       - key: FRONTEND_URL
         sync: false
