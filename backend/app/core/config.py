@@ -6,9 +6,9 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
     AI_API_KEY: str
-    AI_MODEL_NAME: str = "gemini-3.5-flash"
+    AI_MODEL_NAME: str = "gemini-2.5-flash"
     FRONTEND_URL: str = "http://localhost:5173"
-    BACKEND_CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    BACKEND_CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173,https://data-science-project-600u50ef6-murtaza231411it-2012.vercel.app"
 
     @property
     def allowed_origins(self) -> list[str]:
@@ -18,6 +18,10 @@ class Settings(BaseSettings):
         return origins
 
     # Automatically read values directly out of the root level .env file
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
 settings = Settings()
