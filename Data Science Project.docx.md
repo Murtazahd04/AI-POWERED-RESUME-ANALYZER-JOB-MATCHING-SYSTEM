@@ -51,11 +51,11 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 | ✓ | Test Cloudinary | Upload and retrieve a test file. |
 | ✓ | Test Resume Upload Flow | Verify React → FastAPI → Cloudinary. |
 | ✓ | Configure Git Workflow | Establish branch, commit and push workflow. |
-| ☐ | Deploy Frontend | Deploy the React application to Vercel. |
-| ☐ | Deploy Backend | Deploy the FastAPI backend to Render. |
-| ☐ | Configure Production Variables | Add required environment variables to Vercel \+ Render. |
-| ☐ | Connect Production Frontend \+ Backend | Connect the live React frontend to the live API. |
-| ☐ | Final Project Base Test | Verify React → FastAPI → MongoDB/Cloudinary works successfully. |
+| ✓ | Deploy Frontend | Deploy the React application to Vercel. |
+| ✓ | Deploy Backend | Deploy the FastAPI backend to Render. |
+| ✓ | Configure Production Variables | Add required environment variables to Vercel \+ Render. |
+| ✓ | Connect Production Frontend \+ Backend | Connect the live React frontend to the live API. |
+| ✓ | Final Project Base Test | Verify React → FastAPI → MongoDB/Cloudinary works successfully. |
 
 # **3\. Phase 2 — Feature Development**
 
