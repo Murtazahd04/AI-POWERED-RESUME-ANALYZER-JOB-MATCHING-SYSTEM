@@ -64,7 +64,7 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 
 | Feature | Done | Pending |
 | :---- | :---- | :---- |
-| User Authentication & Profile | 0 | 7 |
+| ✓ | User Authentication & Profile | 0 | 7 |
 | Resume Upload & Management | 0 | 9 |
 | Resume Parser | 0 | 10 |
 | AI Resume Analysis | 0 | 12 |
