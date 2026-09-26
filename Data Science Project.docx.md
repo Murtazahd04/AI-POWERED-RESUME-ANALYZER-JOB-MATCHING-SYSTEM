@@ -64,7 +64,7 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 
 | Feature | Done | Pending |
 | :---- | :---- | :---- |
-| ✓ | User Authentication & Profile | 0 | 7 |
+| User Authentication & Profile | 0 | 7 |
 | Resume Upload & Management | 0 | 9 |
 | Resume Parser | 0 | 10 |
 | AI Resume Analysis | 0 | 12 |
@@ -81,13 +81,13 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 
 | ✓ | Task | Description |
 | :---- | :---- | :---- |
-| ☐ | User Registration | Create account functionality. |
-| ☐ | User Login | Allow registered users to log in. |
-| ☐ | User Logout | Allow users to log out. |
-| ☐ | Authentication | Implement authentication between frontend and backend. |
-| ☐ | Protected Routes | Protect private pages from unauthenticated users. |
+|  ✓ | User Registration | Create account functionality. |
+|  ✓ | User Login | Allow registered users to log in. |
+|  ✓ | User Logout | Allow users to log out. |
+|  ✓ | Authentication | Implement authentication between frontend and backend. |
+|  ✓ | Protected Routes | Protect private pages from unauthenticated users. |
 | ☐ | User Profile | Display and manage user information. |
-| ☐ | User Data Storage | Store user data in MongoDB. |
+|  ✓ | User Data Storage | Store user data in MongoDB. |
 
 ## **Feature 2 — Resume Upload & Management**
 
