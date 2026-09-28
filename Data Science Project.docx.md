@@ -93,15 +93,15 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 
 | ✓ | Task | Description |
 | :---- | :---- | :---- |
-| ☐ | Resume Upload UI | Create drag-and-drop/browse interface. |
-| ☐ | PDF Upload | Support PDF resumes. |
-| ☐ | DOCX Upload | Support DOCX resumes. |
-| ☐ | File Validation | Validate file type and size. |
+| ✓ | Resume Upload UI | Create drag-and-drop/browse interface. |
+| ✓ | PDF Upload | Support PDF resumes. |
+| ✓ | DOCX Upload | Support DOCX resumes. |
+| ✓ | File Validation | Validate file type and size. |
 | ☐ | Cloudinary Upload | Upload resume to Cloudinary. |
-| ☐ | Upload Status | Display upload progress/status. |
-| ☐ | Resume Preview | Allow users to preview uploaded resumes. |
-| ☐ | Resume History | Display previous resumes. |
-| ☐ | Resume Delete | Allow users to delete resumes. |
+| ✓ | Upload Status | Display upload progress/status. |
+| ✓ | Resume Preview | Allow users to preview uploaded resumes. |
+| ✓ | Resume History | Display previous resumes. |
+| ✓ | Resume Delete | Allow users to delete resumes. |
 
 ## **Feature 3 — Resume Parser**
 
