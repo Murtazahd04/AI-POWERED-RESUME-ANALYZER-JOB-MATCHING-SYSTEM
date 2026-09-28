@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     ai_api_key: str = ""
     ai_model_name: str = "gemini-2.5-flash"
 
+    # Upload limits (new)
+    max_upload_mb: int = 5
+    max_resumes_per_user: int = 10
+
     @property
     def cors_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
