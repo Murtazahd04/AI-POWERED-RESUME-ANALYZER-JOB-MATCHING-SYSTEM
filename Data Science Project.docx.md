@@ -107,16 +107,16 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 
 | ✓ | Task | Description |
 | :---- | :---- | :---- |
-| ☐ | PDF Text Extraction | Extract text from PDF resumes. |
-| ☐ | DOCX Text Extraction | Extract text from DOCX resumes. |
-| ☐ | Text Cleaning | Clean extracted resume text. |
-| ☐ | Name Extraction | Extract candidate name. |
-| ☐ | Contact Extraction | Extract relevant contact information. |
+| ✓ | PDF Text Extraction | Extract text from PDF resumes. |
+| ✓ | DOCX Text Extraction | Extract text from DOCX resumes. |
+| ✓ | Text Cleaning | Clean extracted resume text. |
+| ✓ | Name Extraction | Extract candidate name. |
+| ✓ | Contact Extraction | Extract relevant contact information. |
 | ☐ | Education Extraction | Extract degrees and institutions. |
 | ☐ | Experience Extraction | Extract work experience. |
-| ☐ | Project Extraction | Extract projects and technologies. |
-| ☐ | Certification Extraction | Extract certifications. |
-| ☐ | Skill Extraction | Extract technical and soft skills. |
+| ✓ | Project Extraction | Extract projects and technologies. |
+| ✓ | Certification Extraction | Extract certifications. |
+| ✓ | Skill Extraction | Extract technical and soft skills. |
 
 ## **Feature 4 — AI Resume Analysis**
 
