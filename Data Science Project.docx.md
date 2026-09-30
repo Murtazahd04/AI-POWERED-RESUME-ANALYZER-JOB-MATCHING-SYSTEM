@@ -112,7 +112,7 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 | ✓ | Text Cleaning | Clean extracted resume text. |
 | ✓ | Name Extraction | Extract candidate name. |
 | ✓ | Contact Extraction | Extract relevant contact information. |
-| ☐ | Education Extraction | Extract degrees and institutions. |
+| ✓ | Education Extraction | Extract degrees and institutions. |
 | ☐ | Experience Extraction | Extract work experience. |
 | ✓ | Project Extraction | Extract projects and technologies. |
 | ✓ | Certification Extraction | Extract certifications. |
