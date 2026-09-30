@@ -19,5 +19,7 @@ export const resumeApi = {
       .then((r) => r.data);
   },
   list: () => api.get("/api/resumes").then((r) => r.data),
+  get: (id) => api.get(`/api/resumes/${id}`).then((r) => r.data),
+  reparse: (id) => api.post(`/api/resumes/${id}/parse`).then((r) => r.data),
   remove: (id) => api.delete(`/api/resumes/${id}`),
 };

@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ResumesPage from "./pages/ResumesPage";
+import ResumeDetailPage from "./pages/ResumeDetailPage";
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -31,6 +32,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ResumesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/resumes/:id"
+        element={
+          <ProtectedRoute>
+            <ResumeDetailPage />
           </ProtectedRoute>
         }
       />

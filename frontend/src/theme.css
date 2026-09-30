@@ -210,3 +210,22 @@ body {
 .btn-filled:hover { background: var(--primary-dark); }
 .btn-danger { color: var(--error-text); border-color: #f0c4c0; }
 .btn-danger:hover { background: var(--error-bg); }
+
+.detail-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 16px;
+}
+.detail-block { margin-bottom: 14px; }
+.detail-block ul { margin: 6px 0 0; padding-left: 20px; }
+.tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.tag {
+  background: #eef0ff;
+  color: var(--primary-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}

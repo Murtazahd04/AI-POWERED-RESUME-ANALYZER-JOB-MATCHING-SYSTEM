@@ -1,5 +1,6 @@
 import logging
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from pymongo import DESCENDING
@@ -7,6 +8,7 @@ from pymongo import DESCENDING
 from ..config import get_settings
 from ..database import get_db
 from ..deps import get_current_user
+from ..services.parser_service import ParseError, extract_text, parse_resume
 from ..services.storage_service import delete_resume, upload_resume
 from ..utils import now, serialize, to_object_id
 
@@ -47,6 +49,13 @@ async def upload(file: UploadFile, user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=413, detail=f"File is too large. Maximum size is {s.max_upload_mb} MB.")
     file_type = _detect_type(file.filename or "", data)
 
+    # NEW: read the file and extract structured data before storing anything
+    try:
+        raw_text = await run_in_threadpool(extract_text, data, file_type)
+        parsed = await run_in_threadpool(parse_resume, raw_text)
+    except ParseError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
     count = await db.resumes.count_documents({"user_id": user["_id"]})
     if count >= s.max_resumes_per_user:
         raise HTTPException(
@@ -69,6 +78,7 @@ async def upload(file: UploadFile, user: dict = Depends(get_current_user)):
         "size_bytes": len(data),
         "file_url": stored["url"],
         "cloudinary_public_id": stored["public_id"],
+        "parsed": parsed,  # NEW
         "uploaded_at": now(),
     }
     result = await db.resumes.insert_one(doc)
@@ -85,6 +95,23 @@ async def list_resumes(user: dict = Depends(get_current_user)):
 @router.get("/{resume_id}")
 async def get_resume(resume_id: str, user: dict = Depends(get_current_user)):
     return serialize(await _get_owned(resume_id, user), drop=HIDDEN_FIELDS)
+
+
+# NEW: re-run parsing on a resume that was uploaded before this feature existed
+@router.post("/{resume_id}/parse")
+async def reparse(resume_id: str, user: dict = Depends(get_current_user)):
+    doc = await _get_owned(resume_id, user)
+    async with httpx.AsyncClient(follow_redirects=True, timeout=30) as client:
+        resp = await client.get(doc["file_url"])
+    if resp.status_code != 200:
+        raise HTTPException(status_code=502, detail="Could not re-download the file from Cloudinary.")
+    try:
+        raw_text = await run_in_threadpool(extract_text, resp.content, doc["file_type"])
+        parsed = await run_in_threadpool(parse_resume, raw_text)
+    except ParseError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    await get_db().resumes.update_one({"_id": doc["_id"]}, {"$set": {"parsed": parsed}})
+    return {"id": resume_id, "parsed": parsed}
 
 
 @router.delete("/{resume_id}", status_code=204)

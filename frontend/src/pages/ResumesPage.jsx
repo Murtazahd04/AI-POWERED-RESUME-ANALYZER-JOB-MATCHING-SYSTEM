@@ -129,8 +129,12 @@ export default function ResumesPage() {
             <div className="resume-meta">
               {r.file_type.toUpperCase()} · {formatSize(r.size_bytes)} · uploaded{" "}
               {new Date(r.uploaded_at).toLocaleDateString()}
+              {r.parsed ? " · parsed" : " · not parsed"}
             </div>
           </div>
+          <Link className="btn-small" to={`/resumes/${r.id}`}>
+            Details
+          </Link>
           <a className="btn-small" href={r.file_url} target="_blank" rel="noreferrer">
             View
           </a>
