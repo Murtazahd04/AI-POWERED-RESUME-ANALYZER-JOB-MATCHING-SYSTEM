@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24
     admin_emails: str = ""
-    cors_origins: str = "http://localhost:5173"
+    cors_origins: str = "http://localhost:5173,https://ai-powered-resume-analyzer-job-matching-w4lw.onrender.com"
 
     cloudinary_cloud_name: str = ""
     cloudinary_api_key: str = ""
