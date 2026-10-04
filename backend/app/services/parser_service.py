@@ -4,12 +4,28 @@ import io
 import re
 import unicodedata
 from datetime import date
+from functools import lru_cache
 
-from ..skills_data import ALIAS_MAP, SKILL_PATTERNS, SOFT_CATEGORY
+from ..skills_data import SKILL_PATTERNS, SOFT_CATEGORY
 
 
 class ParseError(Exception):
     """Raised when a file's text genuinely can't be read (corrupted, password-protected, etc.)."""
+
+
+@lru_cache(maxsize=1)
+def _load_nlp():
+    try:
+        import spacy
+    except ModuleNotFoundError as exc:
+        raise ParseError("spaCy is required to parse resumes. Install the backend requirements.") from exc
+    try:
+        return spacy.load("en_core_web_sm")
+    except OSError as exc:
+        raise ParseError(
+            "The spaCy English model is missing. Install it with "
+            "`python -m spacy download en_core_web_sm`."
+        ) from exc
 
 
 # ---------- 1. Get raw text out of the file ----------
@@ -61,11 +77,14 @@ def clean_text(text: str) -> str:
 # ---------- 3. Split into sections (Experience, Education, etc.) ----------
 SECTION_ALIASES = {
     "summary": ["summary", "profile", "objective", "about me"],
-    "experience": ["experience", "work experience", "employment history", "internships"],
-    "education": ["education", "academic background", "qualifications"],
+    "experience": ["experience", "work experience", "professional experience", "work history",
+                   "employment history", "internships"],
+    "education": ["education", "academic background", "educational background",
+                  "academic qualifications", "qualifications"],
     "skills": ["skills", "technical skills", "key skills", "core competencies"],
-    "projects": ["projects", "personal projects", "academic projects"],
-    "certifications": ["certifications", "certificates", "courses"],
+    "projects": ["projects", "key projects", "project experience", "personal projects", "academic projects"],
+    "certifications": ["certification", "certifications", "certificates", "courses",
+                       "licenses and certifications"],
 }
 _HEADING_LOOKUP = {a: sec for sec, aliases in SECTION_ALIASES.items() for a in aliases}
 
@@ -73,7 +92,9 @@ _HEADING_LOOKUP = {a: sec for sec, aliases in SECTION_ALIASES.items() for a in a
 def _heading_of(line: str) -> str | None:
     if not line or len(line) > 40 or line.startswith("- "):
         return None
-    clean = re.sub(r"[^a-z ]", "", line.lower()).strip()
+    clean = re.sub(r"\s*&\s*", " and ", line.lower())
+    clean = re.sub(r"[^a-z ]", " ", clean)
+    clean = re.sub(r"\s+", " ", clean).strip()
     return _HEADING_LOOKUP.get(clean)
 
 
@@ -98,7 +119,7 @@ GITHUB_RE = re.compile(r"(?:https?://)?(?:www\.)?github\.com/[A-Za-z0-9\-_]+", r
 _NON_NAME = {"resume", "cv", "curriculum", "vitae", "profile"}
 
 
-def extract_name(header_lines: list[str]) -> str | None:
+def extract_name(header_lines: list[str], nlp) -> str | None:
     for line in header_lines[:8]:
         line = line.strip()
         if not line or EMAIL_RE.search(line) or re.search(r"\d", line):
@@ -107,6 +128,10 @@ def extract_name(header_lines: list[str]) -> str | None:
         if 2 <= len(words) <= 4 and all(re.fullmatch(r"[A-Za-z][A-Za-z.'\-]*", w) for w in words):
             if not any(w.lower() in _NON_NAME for w in words):
                 return line.title() if line.isupper() else line
+    header_doc = nlp("\n".join(header_lines[:8]))
+    for entity in header_doc.ents:
+        if entity.label_ == "PERSON":
+            return entity.text.strip()
     return None
 
 
@@ -228,40 +253,54 @@ def parse_experience(lines: list[str]) -> tuple[list[dict], float]:
 
 # ---------- 8. Education ----------
 _DEGREE_RE = re.compile(
-    r"\b(b\.?\s?tech|b\.?\s?sc|bca|b\.?\s?com|bba|bachelors?|m\.?\s?tech|m\.?\s?sc|mca|mba|"
-    r"masters?|phd|diploma|hsc|ssc|12th|10th)\b", re.I)
+    r"\b(b\.?\s?tech|b\.?\s?e\.?|b\.?\s?sc|bca|b\.?\s?com|bba|bachelor(?:'s)?|"
+    r"m\.?\s?tech|m\.?\s?e\.?|m\.?\s?sc|mca|mba|master(?:'s)?|phd|doctorate|"
+    r"diploma|hsc|ssc|12th|10th)\b", re.I)
 _INSTITUTION_RE = re.compile(r"\b(university|college|institute|school|academy)\b", re.I)
-_YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+_YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
 
 
-def parse_education(lines: list[str]) -> list[dict]:
+def parse_education(lines: list[str], nlp) -> list[dict]:
     entries = []
+    current = None
+
+    def finish_entry():
+        if current and current["degree"]:
+            entries.append(current.copy())
+
     for raw in lines:
         line = re.sub(r"^-\s*", "", raw.strip())
         if not line:
             continue
-        if _DEGREE_RE.search(line) or _INSTITUTION_RE.search(line):
-            years = _YEAR_RE.findall(line)
-            entries.append({
-                "text": line,
-                "is_degree_line": bool(_DEGREE_RE.search(line)),
-                "institution": line if _INSTITUTION_RE.search(line) and not _DEGREE_RE.search(line) else None,
-                "year": years[-1] if years else None,
-            })
-    # Merge a "degree" line with the very next "institution" line if they're split across two lines
-    merged = []
-    skip_next = False
-    for i, e in enumerate(entries):
-        if skip_next:
-            skip_next = False
-            continue
-        if e["is_degree_line"] and i + 1 < len(entries) and entries[i + 1]["institution"]:
-            merged.append({"degree": e["text"], "institution": entries[i + 1]["institution"],
-                            "year": e["year"] or entries[i + 1]["year"]})
-            skip_next = True
-        elif e["is_degree_line"]:
-            merged.append({"degree": e["text"], "institution": None, "year": e["year"]})
-    return merged[:6]
+        degree_match = _DEGREE_RE.search(line)
+        institution_match = _INSTITUTION_RE.search(line) or any(
+            entity.label_ == "ORG" for entity in nlp(line).ents
+        )
+        year_match = _YEAR_RE.search(line)
+
+        if degree_match and current and current["degree"]:
+            finish_entry()
+            current = None
+        if current is None:
+            current = {"degree": None, "institution": None, "year": None}
+
+        if degree_match:
+            current["degree"] = line
+        elif institution_match:
+            if current["institution"]:
+                finish_entry()
+                current = {"degree": None, "institution": None, "year": None}
+            current["institution"] = line
+        elif year_match:
+            current["year"] = year_match.group()
+        elif current["degree"] and not current["institution"]:
+            current["institution"] = line
+
+        if year_match:
+            current["year"] = year_match.group()
+
+    finish_entry()
+    return entries[:6]
 
 
 # ---------- 9. Projects ----------
@@ -298,14 +337,15 @@ def parse_resume(raw_text: str) -> dict:
     text = clean_text(raw_text)
     sections = split_sections(text)
     header = [l for l in sections.get("header", []) if l.strip()]
+    nlp = _load_nlp()
 
     experience, years = parse_experience(sections.get("experience", []))
 
     return {
-        "name": extract_name(header),
+        "name": extract_name(header, nlp),
         "contact": extract_contact(text),
         "summary": " ".join(sections.get("summary", [])).strip()[:500] or None,
-        "education": parse_education(sections.get("education", []) or text.splitlines()),
+        "education": parse_education(sections.get("education", []) or text.splitlines(), nlp),
         "experience": experience,
         "total_experience_years": years,
         "projects": parse_projects(sections.get("projects", [])),

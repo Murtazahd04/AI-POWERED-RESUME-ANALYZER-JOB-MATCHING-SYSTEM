@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
-from typing import Literal
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from typing import Annotated, Literal
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class RegisterRequest(BaseModel):
@@ -34,3 +34,58 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: Literal["bearer"] = "bearer"
     user: UserOut
+
+
+class ResumeContactUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: EmailStr | None
+    phone: str | None = Field(max_length=40)
+    linkedin: str | None = Field(max_length=500)
+    github: str | None = Field(max_length=500)
+
+
+class ResumeEducationUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    degree: str | None = Field(max_length=200)
+    institution: str | None = Field(max_length=200)
+    year: str | None = Field(max_length=40)
+
+
+class ResumeExperienceUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = Field(max_length=200)
+    date_range: str = Field(max_length=120)
+    highlights: list[Annotated[str, Field(max_length=500)]] = Field(max_length=30)
+    technologies: list[Annotated[str, Field(max_length=80)]] = Field(max_length=50)
+
+
+class ResumeProjectUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=200)
+    description: list[Annotated[str, Field(max_length=500)]] = Field(max_length=30)
+    technologies: list[Annotated[str, Field(max_length=80)]] = Field(max_length=50)
+
+
+class ResumeSkillsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    technical: list[Annotated[str, Field(max_length=80)]] = Field(max_length=100)
+    soft: list[Annotated[str, Field(max_length=80)]] = Field(max_length=100)
+
+
+class ParsedResumeUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(max_length=120)
+    contact: ResumeContactUpdate
+    summary: str | None = Field(max_length=2000)
+    education: list[ResumeEducationUpdate] = Field(max_length=20)
+    experience: list[ResumeExperienceUpdate] = Field(max_length=50)
+    total_experience_years: float = Field(ge=0, le=100)
+    projects: list[ResumeProjectUpdate] = Field(max_length=50)
+    certifications: list[Annotated[str, Field(max_length=300)]] = Field(max_length=50)
+    skills: ResumeSkillsUpdate

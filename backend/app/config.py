@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     cloudinary_api_secret: str = ""
 
     ai_api_key: str = ""
-    ai_model_name: str = "gemini-2.5-flash"
+    ai_model_name: str = "gemini-3.5-flash-lite"
 
     # Upload limits (new)
     max_upload_mb: int = 5
