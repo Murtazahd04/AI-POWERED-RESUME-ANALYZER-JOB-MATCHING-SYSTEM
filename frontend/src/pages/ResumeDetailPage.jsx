@@ -273,6 +273,7 @@ export default function ResumeDetailPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [parserChoice, setParserChoice] = useState("");
   const [analyzingResume, setAnalyzingResume] = useState(false);
   const [resumeAnalysis, setResumeAnalysis] = useState(null);
   const [openAnalysis, setOpenAnalysis] = useState({});
@@ -281,6 +282,9 @@ export default function ResumeDetailPage() {
   useEffect(() => {
     resumeApi.get(id).then((data) => {
       setResume(data);
+      if (data.parser_used) {
+        setParserChoice(data.parser_used);
+      }
       const saved = data.ai_results ?? {};
       const legacyResult = {
         skills_analysis: saved.skills?.result,
@@ -409,15 +413,26 @@ export default function ResumeDetailPage() {
   }
 
   async function reparse() {
+    if (!parserChoice) {
+      setError("Choose AI parsing or spaCy parsing before reparsing.");
+      return;
+    }
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      const data = await resumeApi.reparse(id);
-      setResume((current) => ({ ...current, parsed: data.parsed, ai_results: {} }));
+      const data = await resumeApi.reparse(id, parserChoice);
+      setResume((current) => ({
+        ...current,
+        parsed: data.parsed,
+        parser_used: data.parser_used,
+        parsed_at: data.parsed_at,
+        ai_results: {},
+      }));
       setResumeAnalysis(null);
       setOpenAnalysis({});
       setOpenImprovements({});
+      setNotice(`Resume successfully re-parsed using ${data.parser_used === "ai" ? "AI" : "spaCy"}. Stale AI analysis results have been cleared.`);
     } catch (e) {
       setError(apiErrorMessage(e));
     } finally {
@@ -469,7 +484,8 @@ export default function ResumeDetailPage() {
         <Link to="/resumes" className="back-link">← Back to resumes</Link>
         <p style={{ marginTop: 20 }}>This resume hasn't been parsed yet.</p>
         {error && <div className="auth-error">{error}</div>}
-        <button onClick={reparse} disabled={busy}>
+        <ParserChoice value={parserChoice} onChange={setParserChoice} disabled={busy} />
+        <button onClick={reparse} disabled={busy || !parserChoice}>
           {busy ? "Parsing..." : "Parse now"}
         </button>
       </div>
@@ -489,6 +505,9 @@ export default function ResumeDetailPage() {
       <h1 className="page-title">{p.name || resume.filename}</h1>
       <p className="page-subtitle">
         {resume.filename} · {p.total_experience_years ?? 0} years of experience detected
+        {resume.parser_used && (
+          <> · Parsed with {resume.parser_used === "ai" ? "AI" : "spaCy"}{resume.parsed_at ? ` on ${new Date(resume.parsed_at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}` : ""}</>
+        )}
       </p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
@@ -499,7 +518,8 @@ export default function ResumeDetailPage() {
             <button className="btn-small btn-filled" onClick={analyzeResume} disabled={analyzingResume || busy}>
               {analyzingResume ? "Analyzing your resume..." : "Analyze my resume"}
             </button>
-            <button className="btn-small" onClick={reparse} disabled={busy}>
+            <ParserChoice value={parserChoice} onChange={setParserChoice} disabled={busy} compact />
+            <button className="btn-small" onClick={reparse} disabled={busy || !parserChoice}>
               {busy ? "Parsing..." : "Re-parse"}
             </button>
           </>
@@ -800,4 +820,15 @@ export default function ResumeDetailPage() {
       )}
     </div>
   );
+}
+
+function ParserChoice({ value, onChange, disabled, compact = false }) {
+  return <label className={compact ? "parser-choice parser-choice-compact" : "parser-choice"}>
+    <span>{compact ? "Parser" : "Choose a parser"}</span>
+    <select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
+      <option value="">Select…</option>
+      <option value="ai">AI parsing</option>
+      <option value="spacy">spaCy parsing</option>
+    </select>
+  </label>;
 }

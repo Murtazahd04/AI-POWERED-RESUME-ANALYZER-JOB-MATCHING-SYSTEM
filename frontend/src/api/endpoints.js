@@ -20,8 +20,12 @@ export const resumeApi = {
   },
   list: () => api.get("/api/resumes").then((r) => r.data),
   get: (id) => api.get(`/api/resumes/${id}`).then((r) => r.data),
-  reparse: (id) => api.post(`/api/resumes/${id}/parse`).then((r) => r.data),
+  reparse: (id, parser) => api.post(`/api/resumes/${id}/parse`, { parser }).then((r) => r.data),
   analyzeResume: (id) => api.post(`/api/resumes/${id}/full-analysis`).then((r) => r.data),
   saveParsed: (id, parsed) => api.put(`/api/resumes/${id}/parsed`, parsed).then((r) => r.data),
   remove: (id) => api.delete(`/api/resumes/${id}`),
+};
+
+export const adminApi = {
+  analytics: (params) => api.get("/api/admin/analytics", { params }).then((r) => r.data),
 };

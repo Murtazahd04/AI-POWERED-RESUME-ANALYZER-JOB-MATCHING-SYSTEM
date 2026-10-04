@@ -89,3 +89,7 @@ class ParsedResumeUpdate(BaseModel):
     projects: list[ResumeProjectUpdate] = Field(max_length=50)
     certifications: list[Annotated[str, Field(max_length=300)]] = Field(max_length=50)
     skills: ResumeSkillsUpdate
+
+
+class ReparseRequest(BaseModel):
+    parser: Literal["spacy", "ai"]

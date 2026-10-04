@@ -284,21 +284,21 @@ Complete these two work items in order. Both are pending; do not mark a task com
 
 ## **Task 1 — Admin Login & AI Insights Dashboard**
 
-- [ ] Create the initial admin account for `admin@gmail.com`; load the requested password from a private environment secret, store only a secure password hash, and keep the plaintext out of source code and this tracked plan.
-- [ ] Add admin-role authorization to all admin-only backend endpoints and frontend routes.
-- [ ] Record each AI request's user, model, operation/section, timestamp, status, provider-reported input/output tokens, and pricing-version reference in MongoDB.
-- [ ] Calculate estimated input/output and total model costs using configurable model rates; retain the rate snapshot so historical costs remain explainable.
-- [ ] Provide section-level input/output usage and per-user recommendation cost. Label any allocated/estimated section split accurately; do not present an allocation as provider-reported exact usage.
-- [ ] Build an admin dashboard for resume analysis counts, model and token totals, section usage, estimated cost, and per-user recommendation cost.
-- [ ] Test admin login/authorization, analytics access boundaries, token recording, cost calculations, and dashboard results.
+- [x] Create the initial admin account for `admin@gmail.com`; load the requested password from a private environment secret, store only a secure password hash, and keep the plaintext out of source code and this tracked plan.
+- [x] Add admin-role authorization to all admin-only backend endpoints and frontend routes.
+- [x] Record each AI request's user, model, operation/section, timestamp, status, provider-reported input/output tokens, and pricing-version reference in MongoDB.
+- [x] Calculate estimated input/output and total model costs using configurable model rates; retain the rate snapshot so historical costs remain explainable.
+- [x] Provide section-level input/output usage and per-user recommendation cost. Label any allocated/estimated section split accurately; do not present an allocation as provider-reported exact usage.
+- [x] Build an admin dashboard for resume analysis counts, model and token totals, section usage, estimated cost, and per-user recommendation cost.
+- [x] Test admin login/authorization, analytics access boundaries, token recording, cost calculations, and dashboard results.
 
 ## **Task 2 — AI Resume Parsing & Parser Choice**
 
-- [ ] Add AI-based parsing that returns the existing structured resume schema for extracted PDF/DOCX text, with strict validation and no invented resume details.
-- [ ] Update the re-parse experience to let the user explicitly choose AI parsing or the existing NLP/spaCy parser.
-- [ ] Send only the resume content needed for parsing to the AI provider; do not log raw resume text or expose it in admin usage analytics.
-- [ ] Save which parser was used and when; clear stale AI analysis results after a successful reparse.
-- [ ] Preserve the current spaCy parser as an available option and report provider, validation, and parser errors clearly without silently switching engines.
+- [x] Add AI-based parsing that returns the existing structured resume schema for extracted PDF/DOCX text, with strict validation and no invented resume details.
+- [x] Update the re-parse experience to let the user explicitly choose AI parsing or the existing NLP/spaCy parser.
+- [x] Send only the resume content needed for parsing to the AI provider; do not log raw resume text or expose it in admin usage analytics.
+- [x] Save which parser was used and when; clear stale AI analysis results after a successful reparse.
+- [x] Preserve the current spaCy parser as an available option and report provider, validation, and parser errors clearly without silently switching engines.
 - [ ] Test both parser choices, their structured output, error handling, ownership checks, and stale-analysis invalidation.
 
 # **4\. Phase 3 — Final Integration & Testing**

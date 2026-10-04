@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from .config import get_settings
 from .database import close, connect
-from .routes import auth_routes, health_routes, resume_routes
+from .routes import admin_routes, auth_routes, health_routes, resume_routes
 
 
 @asynccontextmanager
@@ -30,6 +30,7 @@ app.add_middleware(
 app.include_router(health_routes.router)
 app.include_router(auth_routes.router)
 app.include_router(resume_routes.router)
+app.include_router(admin_routes.router)
 
 
 # Turns FastAPI's technical validation errors into one plain sentence,

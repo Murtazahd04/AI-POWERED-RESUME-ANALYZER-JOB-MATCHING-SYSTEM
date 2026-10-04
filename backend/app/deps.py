@@ -20,3 +20,9 @@ async def get_current_user(creds: HTTPAuthorizationCredentials | None = Depends(
     if user is None:
         raise unauthorized
     return user
+
+
+async def get_current_admin(user: dict = Depends(get_current_user)) -> dict:
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access is required.")
+    return user

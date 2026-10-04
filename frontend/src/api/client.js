@@ -13,6 +13,9 @@ api.interceptors.request.use((config) => {
 export function apiErrorMessage(err, fallback = "Something went wrong. Please try again.") {
   const detail = err?.response?.data?.detail;
   if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail.map((d) => d.msg || JSON.stringify(d)).join("; ");
+  }
   if (err?.message === "Network Error") return "Can't reach the server. Is the backend running?";
   return fallback;
 }

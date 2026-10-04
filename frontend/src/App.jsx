@@ -6,6 +6,7 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ResumesPage from "./pages/ResumesPage";
 import ResumeDetailPage from "./pages/ResumeDetailPage";
+import AdminAccessPage from "./pages/AdminAccessPage";
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -40,6 +41,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ResumeDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminAccessPage />
           </ProtectedRoute>
         }
       />

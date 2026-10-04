@@ -1,5 +1,6 @@
 """Gemini-backed resume skills analysis."""
 import json
+from contextvars import ContextVar
 from typing import Literal
 from urllib.parse import quote
 
@@ -132,6 +133,19 @@ class AIAnalysisError(Exception):
         self.status_code = status_code
 
 
+_last_provider_usage: ContextVar[dict | None] = ContextVar("last_provider_usage", default=None)
+
+
+def clear_provider_usage() -> None:
+    """Clear request-local provider usage before starting an AI operation."""
+    _last_provider_usage.set(None)
+
+
+def get_provider_usage() -> dict | None:
+    """Return request-local usage reported by Gemini, without estimates."""
+    return _last_provider_usage.get()
+
+
 async def _request_structured_analysis(
     api_key: str,
     model_name: str,
@@ -194,7 +208,14 @@ async def _request_structured_analysis(
         )
 
     try:
-        candidates = response.json()["candidates"]
+        response_data = response.json()
+        usage = response_data.get("usageMetadata")
+        if isinstance(usage, dict):
+            _last_provider_usage.set({
+                "input_tokens": usage.get("promptTokenCount"),
+                "output_tokens": usage.get("candidatesTokenCount"),
+            })
+        candidates = response_data["candidates"]
         text = candidates[0]["content"]["parts"][0]["text"]
         return json.loads(text)
     except (KeyError, IndexError, TypeError, ValueError, ValidationError) as exc:

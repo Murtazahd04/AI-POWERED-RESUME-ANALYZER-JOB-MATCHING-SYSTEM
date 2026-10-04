@@ -15,6 +15,8 @@ from app.services.ai_analysis_service import (
     analyze_resume_weaknesses,
     generate_resume_summary,
     generate_improvement_suggestions,
+    clear_provider_usage,
+    get_provider_usage,
 )
 from app.services.ai_prompt_service import (
     EDUCATION_ANALYSIS_SYSTEM_PROMPT,
@@ -57,6 +59,32 @@ class AnalyzeResumeSkillsTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("gemini-test-model:generateContent", call.args[0])
         self.assertEqual(call.kwargs["params"], {"key": "test-api-key"})
         self.assertEqual(call.kwargs["json"]["generationConfig"]["responseMimeType"], "application/json")
+
+    async def test_captures_provider_reported_token_usage(self):
+        expected = {
+            "identified_skills": ["Python"],
+            "strengths": ["Uses Python in a resume project."],
+            "gaps": [],
+        }
+        response = httpx.Response(
+            200,
+            json={
+                "candidates": [{"content": {"parts": [{"text": json.dumps(expected)}]}}],
+                "usageMetadata": {"promptTokenCount": 120, "candidatesTokenCount": 34},
+            },
+            request=httpx.Request("POST", "https://example.test"),
+        )
+        client = AsyncMock()
+        client.post.return_value = response
+        client_context = AsyncMock()
+        client_context.__aenter__.return_value = client
+        client_context.__aexit__.return_value = None
+
+        clear_provider_usage()
+        with patch("app.services.ai_analysis_service.httpx.AsyncClient", return_value=client_context):
+            await analyze_resume_skills({"skills": {"technical": ["Python"]}}, "test-api-key", "gemini-test-model")
+
+        self.assertEqual(get_provider_usage(), {"input_tokens": 120, "output_tokens": 34})
 
     async def test_missing_api_key_returns_configuration_error_without_request(self):
         with patch("app.services.ai_analysis_service.httpx.AsyncClient") as client_class:
