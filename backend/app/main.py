@@ -9,6 +9,8 @@ from .database import close, connect
 from .routes import admin_routes, auth_routes, health_routes, resume_routes
 from .routes import auth_routes, health_routes, resume_routes, job_match_routes
 from .routes import admin_routes, auth_routes, health_routes, job_match_routes, resume_routes
+from app.routers import skill_gap
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await connect()
@@ -32,7 +34,8 @@ app.include_router(auth_routes.router)
 app.include_router(resume_routes.router)
 app.include_router(admin_routes.router)
 app.include_router(job_match_routes.router)
- 
+app.include_router(skill_gap.router)
+
 # Turns FastAPI's technical validation errors into one plain sentence,
 # e.g. "password: Password must contain at least one letter and one number."
 @app.exception_handler(RequestValidationError)

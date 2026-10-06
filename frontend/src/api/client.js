@@ -19,3 +19,9 @@ export function apiErrorMessage(err, fallback = "Something went wrong. Please tr
   if (err?.message === "Network Error") return "Can't reach the server. Is the backend running?";
   return fallback;
 }
+   export const skillGapApi = {
+     analyze: (resumeId, role) =>
+       api.post("/skill-gap/analyze", { resume_id: resumeId, role }).then((r) => r.data),
+     latest: () => api.get("/skill-gap/latest").then((r) => r.data),
+     roles: () => api.get("/skill-gap/roles").then((r) => r.data),
+   };

@@ -9,6 +9,9 @@ import ResumesPage from "./pages/ResumesPage";
 import ResumeDetailPage from "./pages/ResumeDetailPage";
 import JobMatchingPage from "./pages/JobMatchingPage";
 import ResumeScorePage from "./pages/ResumeScorePage";
+import SkillGapPage from "./pages/SkillGapPage";
+
+ 
 function RootRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -58,6 +61,14 @@ function AppRoutes() {
   element={
     <ProtectedRoute>
       <ResumeScorePage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/skill-gap"
+  element={
+    <ProtectedRoute>
+      <Layout><SkillGapPage /></Layout>
     </ProtectedRoute>
   }
 />

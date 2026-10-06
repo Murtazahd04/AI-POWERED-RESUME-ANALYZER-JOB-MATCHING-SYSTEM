@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { resumeApi } from "../api/endpoints";
+import { resumeApi, skillGapApi } from "../api/endpoints";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [resumes, setResumes] = useState(null);
+  const [gap, setGap] = useState(null);
 
   useEffect(() => {
     resumeApi.list().then(setResumes).catch(() => setResumes([]));
+    skillGapApi.latest().then(setGap).catch(() => setGap(null));
   }, []);
 
   const latest = resumes?.find((r) => r.score) || resumes?.[0] || null;
@@ -43,10 +45,12 @@ export default function DashboardPage() {
           <div className="stat-value">{skillCount ?? "—"}</div>
           <div className="stat-sub">{latest ? `From "${latest.filename}"` : "No resume yet"}</div>
         </div>
-        <div className="stat-card stat-card-soon">
+        <div className="stat-card" style={{ cursor: "pointer" }} onClick={() => navigate("/skill-gap")}>
           <div className="stat-label">Skill Gaps</div>
-          <div className="stat-value">—</div>
-          <div className="stat-sub">Coming soon</div>
+          <div className="stat-value">{gap ? gap.gap_count : "—"}</div>
+          <div className="stat-sub">
+            {gap ? `For ${gap.job_title}` : "Run a skill gap analysis"}
+          </div>
         </div>
       </div>
 

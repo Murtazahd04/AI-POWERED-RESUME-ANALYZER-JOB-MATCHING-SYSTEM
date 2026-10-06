@@ -38,3 +38,9 @@ export const scoreApi = {
 export const jobApi = {
   list: () => api.get("/api/jobs").then((r) => r.data),
 };
+export const skillGapApi = {
+  analyze: (resumeId, role) =>
+    api.post("/api/skill-gap/analyze", { resume_id: resumeId, role }).then((r) => r.data),
+  latest: () => api.get("/api/skill-gap/latest").then((r) => r.data),
+  roles: () => api.get("/api/skill-gap/roles").then((r) => r.data),
+};

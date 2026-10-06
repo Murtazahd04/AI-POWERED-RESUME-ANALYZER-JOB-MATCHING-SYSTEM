@@ -6,7 +6,7 @@ const LINKS = [
   { to: "/resumes", label: "Resume Analyzer", icon: "↑" },
   { to: "/resume-score", label: "Resume Score", icon: "◉" },
   { to: "/job-matching", label: "Job Matching", icon: "○" },
-  { to: "/skill-gap", label: "Skill Gap", icon: "◇", soon: true },
+  { to: "/skill-gap", label: "Skill Gap", icon: "◇" },
   { to: "/profile", label: "Profile", icon: "◎", soon: true },
 ];
 
