@@ -278,6 +278,9 @@ export default function ResumeDetailPage() {
   const [resumeAnalysis, setResumeAnalysis] = useState(null);
   const [openAnalysis, setOpenAnalysis] = useState({});
   const [openImprovements, setOpenImprovements] = useState({});
+   
+  // --- NEW: which tab is showing ---
+const [tab, setTab] = useState("details");
 
   useEffect(() => {
     resumeApi.get(id).then((data) => {
@@ -312,6 +315,7 @@ export default function ResumeDetailPage() {
     }).catch((e) => setError(apiErrorMessage(e)));
   }, [id]);
 
+  
   function beginEdit() {
     setDraft(makeDraft(resume.parsed));
     setEditing(true);
@@ -459,6 +463,7 @@ export default function ResumeDetailPage() {
       }));
       setOpenAnalysis({});
       setOpenImprovements({});
+      setTab("ai");
     } catch (e) {
       setError(apiErrorMessage(e, "Couldn't analyze the resume."));
     } finally {
@@ -510,8 +515,8 @@ export default function ResumeDetailPage() {
         )}
       </p>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        <a href={resume.file_url} target="_blank" rel="noreferrer">View original</a>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        <a href={resume.file_url} target="_blank" rel="noreferrer" className="btn-small">View original</a>
         {!editing && (
           <>
             <button className="btn-small" onClick={beginEdit} disabled={busy}>Edit details</button>
@@ -528,7 +533,7 @@ export default function ResumeDetailPage() {
       {error && <div className="auth-error">{error}</div>}
       {notice && <div className="auth-success">{notice}</div>}
 
-      {editing && (
+      {editing ? (
         <form onSubmit={saveEdit}>
           <div className="detail-card">
             <h2 className="section-title">Edit resume details</h2>
@@ -639,19 +644,6 @@ export default function ResumeDetailPage() {
 
           <div className="detail-card">
             <h2 className="section-title">Certifications</h2>
-            {resumeAnalysis && (
-              <SectionAnalysisToggles
-                section="certifications"
-                suggestionSection={resumeSectionAnalysis.certifications.suggestionSection}
-                result={resumeAnalysis.certification_analysis}
-                suggestions={resumeAnalysis.improvement_suggestions ?? []}
-                openAnalysis={openAnalysis}
-                setOpenAnalysis={setOpenAnalysis}
-                openImprovements={openImprovements}
-                setOpenImprovements={setOpenImprovements}
-                showEmptyAnalysis
-              />
-            )}
             <TextAreaField label="Certifications (one per line)" rows={5} addBullet
               value={draft.certifications.join("\n")}
               onChange={(value) => updateDraft("certifications", textToLines(value))} />
@@ -666,156 +658,204 @@ export default function ResumeDetailPage() {
             </button>
           </div>
         </form>
-      )}
-
-      {!editing && (
+      ) : (
         <>
-          <div className="detail-card">
-            <h2 className="section-title">Contact</h2>
-            <p>Email: {p.contact?.email || "—"}</p>
-            <p>Phone: {p.contact?.phone || "—"}</p>
-            <p>LinkedIn: {p.contact?.linkedin || "—"}</p>
-            <p>GitHub: {p.contact?.github || "—"}</p>
+          {/* ---------- TAB BAR ---------- */}
+          <div className="tab-bar">
+            <button className={`tab-btn ${tab === "details" ? "tab-btn-active" : ""}`} onClick={() => setTab("details")}>
+              Resume details
+            </button>
+
+            <button className={`tab-btn ${tab === "ai" ? "tab-btn-active" : ""}`} onClick={() => setTab("ai")}>
+              AI analysis {resumeAnalysis && <span className="tab-dot" />}
+            </button>
           </div>
 
-          <div className="detail-card">
-            <h2 className="section-title">Skills</h2>
-            {resumeAnalysis && (
-              <SectionAnalysisToggles
-                section="skills"
-                suggestionSection={resumeSectionAnalysis.skills.suggestionSection}
-                result={resumeAnalysis.skills_analysis}
-                suggestions={resumeAnalysis.improvement_suggestions ?? []}
-                openAnalysis={openAnalysis}
-                setOpenAnalysis={setOpenAnalysis}
-                openImprovements={openImprovements}
-                setOpenImprovements={setOpenImprovements}
-                showEmptyAnalysis
-              />
-            )}
-            <div className="tag-row">
-              {[...technical, ...soft].map((skill, index) => (
-                <span key={`${skill}-${index}`} className="tag">{skill}</span>
-              ))}
-              {technical.length + soft.length === 0 && <span className="muted">No skills detected.</span>}
-            </div>
-          </div>
-
-          <div className="detail-card" aria-live="polite">
-            <h2 className="section-title">AI resume analysis</h2>
-            <p className="muted">
-              Run one evidence-based analysis for every resume section and its improvement suggestions.
-            </p>
-            {resumeAnalysis && (
-              <p className="muted">Your latest analysis is saved and will be available when you return.</p>
-            )}
-            {!resumeAnalysis && (
-              <p className="muted">Select "Analyze my resume" to generate the section analyses and improvement suggestions.</p>
-            )}
-            {resumeAnalysis && analysisSections.map(({ key, title, suggestionSection }) => {
-              const result = resumeAnalysis[key];
-              return (
-                <section className="analysis-section" key={key}>
-                  <h3>{title}</h3>
-                  <SectionAnalysisToggles
-                    section={key}
-                    suggestionSection={suggestionSection}
-                    result={result}
-                    suggestions={resumeAnalysis.improvement_suggestions ?? []}
-                    openAnalysis={openAnalysis}
-                    setOpenAnalysis={setOpenAnalysis}
-                    openImprovements={openImprovements}
-                    setOpenImprovements={setOpenImprovements}
-                  />
-                </section>
-              );
-            })}
-          </div>
-
-          <div className="detail-card">
-            <h2 className="section-title">Experience</h2>
-            {resumeAnalysis && (
-              <SectionAnalysisToggles
-                section="experience"
-                suggestionSection={resumeSectionAnalysis.experience.suggestionSection}
-                result={resumeAnalysis.experience_analysis}
-                suggestions={resumeAnalysis.improvement_suggestions ?? []}
-                openAnalysis={openAnalysis}
-                setOpenAnalysis={setOpenAnalysis}
-                openImprovements={openImprovements}
-                setOpenImprovements={setOpenImprovements}
-                showEmptyAnalysis
-              />
-            )}
-            {experience.length === 0 && <p className="muted">No experience detected.</p>}
-            {experience.map((item, index) => (
-              <div key={index} className="detail-block">
-                <strong>{item.title || "Role"}</strong> <span className="muted">({item.date_range})</span>
-                <ul>{(item.highlights ?? []).map((highlight, i) => <li key={i}>{highlight}</li>)}</ul>
+          {/* ---------- TAB: Resume details ---------- */}
+          {tab === "details" && (
+            <>
+              <div className="detail-card">
+                <h2 className="section-title">Contact</h2>
+                <p>Email: {p.contact?.email || "—"}</p>
+                <p>Phone: {p.contact?.phone || "—"}</p>
+                <p>LinkedIn: {p.contact?.linkedin || "—"}</p>
+                <p>GitHub: {p.contact?.github || "—"}</p>
               </div>
-            ))}
-          </div>
 
-          <div className="detail-card">
-            <h2 className="section-title">Education</h2>
-            {resumeAnalysis && (
-              <SectionAnalysisToggles
-                section="education"
-                suggestionSection={resumeSectionAnalysis.education.suggestionSection}
-                result={resumeAnalysis.education_analysis}
-                suggestions={resumeAnalysis.improvement_suggestions ?? []}
-                openAnalysis={openAnalysis}
-                setOpenAnalysis={setOpenAnalysis}
-                openImprovements={openImprovements}
-                setOpenImprovements={setOpenImprovements}
-                showEmptyAnalysis
-              />
-            )}
-            {education.length === 0 && <p className="muted">No education detected.</p>}
-            {education.map((item, index) => (
-              <div key={index} className="detail-block">
-                <strong>{item.degree}</strong>
-                <div className="muted">{[item.institution, item.year].filter(Boolean).join(" · ")}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="detail-card">
-            <h2 className="section-title">Projects</h2>
-            {resumeAnalysis && (
-              <SectionAnalysisToggles
-                section="projects"
-                suggestionSection={resumeSectionAnalysis.projects.suggestionSection}
-                result={resumeAnalysis.project_analysis}
-                suggestions={resumeAnalysis.improvement_suggestions ?? []}
-                openAnalysis={openAnalysis}
-                setOpenAnalysis={setOpenAnalysis}
-                openImprovements={openImprovements}
-                setOpenImprovements={setOpenImprovements}
-                showEmptyAnalysis
-              />
-            )}
-            {projects.length === 0 && <p className="muted">No projects detected.</p>}
-            {projects.map((project, index) => (
-              <div key={index} className="detail-block">
-                <strong>{project.name}</strong>
-                {(project.description ?? []).map((description, i) => (
-                  <p key={i} style={{ margin: "4px 0" }}>{description}</p>
-                ))}
+              <div className="detail-card">
+                <h2 className="section-title">Skills</h2>
                 <div className="tag-row">
-                  {(project.technologies ?? []).map((technology, i) => (
-                    <span key={`${technology}-${i}`} className="tag">{technology}</span>
+                  {[...technical, ...soft].map((skill, index) => (
+                    <span key={`${skill}-${index}`} className="tag">{skill}</span>
                   ))}
+                  {technical.length + soft.length === 0 && <span className="muted">No skills detected.</span>}
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="detail-card">
-            <h2 className="section-title">Certifications</h2>
-            {certifications.length === 0 && <p className="muted">None detected.</p>}
-            <ul>{certifications.map((certification, index) => <li key={index}>{certification}</li>)}</ul>
-          </div>
+              <div className="detail-card">
+                <h2 className="section-title">Experience</h2>
+                {experience.length === 0 && <p className="muted">No experience detected.</p>}
+                {experience.map((item, index) => (
+                  <div key={index} className="detail-block">
+                    <strong>{item.title || "Role"}</strong> <span className="muted">({item.date_range})</span>
+                    <ul>{(item.highlights ?? []).map((highlight, i) => <li key={i}>{highlight}</li>)}</ul>
+                  </div>
+                ))}
+              </div>
+
+              <div className="detail-card">
+                <h2 className="section-title">Education</h2>
+                {education.length === 0 && <p className="muted">No education detected.</p>}
+                {education.map((item, index) => (
+                  <div key={index} className="detail-block">
+                    <strong>{item.degree}</strong>
+                    <div className="muted">{[item.institution, item.year].filter(Boolean).join(" · ")}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="detail-card">
+                <h2 className="section-title">Projects</h2>
+                {projects.length === 0 && <p className="muted">No projects detected.</p>}
+                {projects.map((project, index) => (
+                  <div key={index} className="detail-block">
+                    <strong>{project.name}</strong>
+                    {(project.description ?? []).map((description, i) => (
+                      <p key={i} style={{ margin: "4px 0" }}>{description}</p>
+                    ))}
+                    <div className="tag-row">
+                      {(project.technologies ?? []).map((technology, i) => (
+                        <span key={`${technology}-${i}`} className="tag">{technology}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="detail-card">
+                <h2 className="section-title">Certifications</h2>
+                {certifications.length === 0 && <p className="muted">None detected.</p>}
+                <ul>{certifications.map((certification, index) => <li key={index}>{certification}</li>)}</ul>
+              </div>
+            </>
+          )}
+
+           
+          {tab === "score" && (
+            <div className="detail-card">
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h2 className="section-title" style={{ margin: 0 }}>Resume score</h2>
+                <button className="btn-small btn-filled" onClick={runScore} disabled={scoring}>
+                  {scoring ? "Scoring..." : resume.score ? "Recompute" : "Compute score"}
+                </button>
+              </div>
+              {scoreError && <div className="auth-error" style={{ marginTop: 12 }}>{scoreError}</div>}
+
+              {resume.score ? (
+                <>
+                  <div className="score-ring-row">
+                    <div className="score-ring">
+                      <span className="score-number">{resume.score.overall}</span>
+                      <span className="score-max">/100</span>
+                    </div>
+                    <div>
+                      <div className="score-grade">{resume.score.grade}</div>
+                      <div className="muted">{resume.score.summary}</div>
+                    </div>
+                  </div>
+
+                  <div className="score-bars">
+                    {Object.entries(resume.score.components).map(([key, c]) => (
+                      <div key={key} className="score-bar-row">
+                        <div className="score-bar-label">
+                          <span style={{ textTransform: "capitalize" }}>{key}</span>
+                          <span>{c.score}/100</span>
+                        </div>
+                        <div className="progress-track">
+                          <div className="progress-fill" style={{ width: `${c.score}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="score-bar-row">
+                      <div className="score-bar-label">
+                        <span>ATS compatibility</span>
+                        <span>{resume.score.ats.score}/100</span>
+                      </div>
+                      <div className="progress-track">
+                        <div className="progress-fill" style={{ width: `${resume.score.ats.score}%` }} />
+                      </div>
+                    </div>
+                  </div>
+
+                
+                </>
+              ) : (
+                <p className="muted" style={{ marginTop: 16 }}>Click "Compute score" to see your resume's score breakdown.</p>
+              )}
+            </div>
+          )}
+
+          {/* ---------- TAB: AI analysis ---------- */}
+          {tab === "ai" && (
+            <div className="detail-card" aria-live="polite">
+              <h2 className="section-title">AI resume analysis</h2>
+              <p className="muted">
+                Run one evidence-based analysis for every resume section and its improvement suggestions.
+              </p>
+              {resumeAnalysis && (
+                <p className="muted">Your latest analysis is saved and will be available when you return.</p>
+              )}
+              {!resumeAnalysis && (
+                <p className="muted">Click "Analyze my resume" above to generate the section analyses and improvement suggestions.</p>
+              )}
+              {resumeAnalysis && analysisSections.map(({ key, title, suggestionSection }) => {
+                const result = resumeAnalysis[key];
+                return (
+                  <section className="analysis-section" key={key}>
+                    <h3>{title}</h3>
+                    <SectionAnalysisToggles
+                      section={key}
+                      suggestionSection={suggestionSection}
+                      result={result}
+                      suggestions={resumeAnalysis.improvement_suggestions ?? []}
+                      openAnalysis={openAnalysis}
+                      setOpenAnalysis={setOpenAnalysis}
+                      openImprovements={openImprovements}
+                      setOpenImprovements={setOpenImprovements}
+                    />
+                  </section>
+                );
+              })}
+              {resumeAnalysis && (
+                <>
+                  {Object.entries(resumeSectionAnalysis).map(([key, { title, suggestionSection }]) => {
+                    const resultKey = key === "skills" ? "skills_analysis"
+                      : key === "experience" ? "experience_analysis"
+                      : key === "education" ? "education_analysis"
+                      : key === "certifications" ? "certification_analysis"
+                      : "project_analysis";
+                    const result = resumeAnalysis[resultKey];
+                    if (!result) return null;
+                    return (
+                      <section className="analysis-section" key={key}>
+                        <h3>{title} analysis</h3>
+                        <SectionAnalysisToggles
+                          section={key}
+                          suggestionSection={suggestionSection}
+                          result={result}
+                          suggestions={resumeAnalysis.improvement_suggestions ?? []}
+                          openAnalysis={openAnalysis}
+                          setOpenAnalysis={setOpenAnalysis}
+                          openImprovements={openImprovements}
+                          setOpenImprovements={setOpenImprovements}
+                        />
+                      </section>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

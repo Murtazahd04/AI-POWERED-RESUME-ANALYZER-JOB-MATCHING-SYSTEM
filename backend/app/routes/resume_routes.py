@@ -5,7 +5,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from pymongo import DESCENDING
-
+from ..services.scoring_service import compute_score
 from ..config import get_settings
 from ..database import get_db
 from ..deps import get_current_user
@@ -29,7 +29,7 @@ from ..services.ai_parser_service import parse_resume_with_ai
 from ..services.parser_service import ParseError, extract_text, parse_resume
 from ..services.storage_service import delete_resume, upload_resume
 from ..utils import now, serialize, to_object_id
-
+from ..services.scoring_service import compute_score
 router = APIRouter(prefix="/api/resumes", tags=["resumes"])
 log = logging.getLogger("resumes")
 
@@ -457,3 +457,15 @@ async def delete(resume_id: str, user: dict = Depends(get_current_user)):
     except Exception as exc:  # even if Cloudinary cleanup fails, still remove the record
         log.warning("Cloudinary delete failed: %s", exc)
     await get_db().resumes.delete_one({"_id": doc["_id"]})
+
+@router.get("/{resume_id}/score")
+async def get_resume_score(resume_id: str, user: dict = Depends(get_current_user)):
+    doc = await _get_owned(resume_id, user)
+    if not doc.get("parsed"):
+        raise HTTPException(status_code=409, detail="Parse this resume before scoring it.")
+    try:
+        score = compute_score(doc["parsed"])
+    except (KeyError, TypeError, ZeroDivisionError) as exc:
+        raise HTTPException(status_code=422, detail=f"Could not score this resume: {exc}") from exc
+    await get_db().resumes.update_one({"_id": doc["_id"]}, {"$set": {"score": score}})
+    return score

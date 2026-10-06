@@ -1,13 +1,14 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ResumesPage from "./pages/ResumesPage";
 import ResumeDetailPage from "./pages/ResumeDetailPage";
-import AdminAccessPage from "./pages/AdminAccessPage";
-
+import JobMatchingPage from "./pages/JobMatchingPage";
+import ResumeScorePage from "./pages/ResumeScorePage";
 function RootRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -24,7 +25,7 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <DashboardPage />
+            <Layout><DashboardPage /></Layout>
           </ProtectedRoute>
         }
       />
@@ -32,7 +33,7 @@ function AppRoutes() {
         path="/resumes"
         element={
           <ProtectedRoute>
-            <ResumesPage />
+            <Layout><ResumesPage /></Layout>
           </ProtectedRoute>
         }
       />
@@ -40,20 +41,30 @@ function AppRoutes() {
         path="/resumes/:id"
         element={
           <ProtectedRoute>
-            <ResumeDetailPage />
+            <Layout><ResumeDetailPage /></Layout>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <AdminAccessPage />
-          </ProtectedRoute>
-        }
-      />
+  path="/job-matching"
+  element={
+    <ProtectedRoute>
+      <JobMatchingPage />
+    </ProtectedRoute>
+  }
+/>
+<Route
+  path="/resume-score"
+  element={
+    <ProtectedRoute>
+      <ResumeScorePage />
+    </ProtectedRoute>
+  }
+/>
     </Routes>
+    
   );
+  
 }
 
 export default function App() {
@@ -62,4 +73,4 @@ export default function App() {
       <AppRoutes />
     </AuthProvider>
   );
-}
+}  

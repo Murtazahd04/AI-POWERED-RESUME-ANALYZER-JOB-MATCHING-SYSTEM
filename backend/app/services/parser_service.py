@@ -42,8 +42,20 @@ def _pdf_text(data: bytes) -> str:
     try:
         with pdfplumber.open(io.BytesIO(data)) as pdf:
             pages = [(page.extract_text() or "") for page in pdf.pages]
+            # A resume often shows a clickable word like "LinkedIn" or "GitHub"
+            # instead of the actual URL - the real address only lives in the
+            # PDF's hyperlink target, which extract_text() above can't see.
+            # Pull those out separately so contact extraction can still find them.
+            links = [
+                link["uri"]
+                for page in pdf.pages
+                for link in (getattr(page, "hyperlinks", None) or [])
+                if link.get("uri")
+            ]
     except Exception as exc:
         raise ParseError("This PDF could not be read. It may be corrupted or password-protected.") from exc
+    if links:
+        pages.append("Links\n" + "\n".join(links))
     return "\n".join(pages)
 
 
@@ -76,15 +88,14 @@ def clean_text(text: str) -> str:
 
 # ---------- 3. Split into sections (Experience, Education, etc.) ----------
 SECTION_ALIASES = {
-    "summary": ["summary", "profile", "objective", "about me"],
-    "experience": ["experience", "work experience", "professional experience", "work history",
-                   "employment history", "internships"],
-    "education": ["education", "academic background", "educational background",
-                  "academic qualifications", "qualifications"],
+    "summary": ["summary", "profile", "objective", "about me", "professional summary"],
+    "experience": ["experience", "work experience", "employment history", "internships",
+                   "internship experience", "professional experience", "relevant experience"],
+    "education": ["education", "academic background", "qualifications"],
     "skills": ["skills", "technical skills", "key skills", "core competencies"],
-    "projects": ["projects", "key projects", "project experience", "personal projects", "academic projects"],
-    "certifications": ["certification", "certifications", "certificates", "courses",
-                       "licenses and certifications"],
+    "projects": ["projects", "personal projects", "academic projects"],
+    "certifications": ["certifications", "certificates", "courses"],
+    "links": ["links", "profiles", "contact links"],
 }
 _HEADING_LOOKUP = {a: sec for sec, aliases in SECTION_ALIASES.items() for a in aliases}
 
@@ -92,10 +103,18 @@ _HEADING_LOOKUP = {a: sec for sec, aliases in SECTION_ALIASES.items() for a in a
 def _heading_of(line: str) -> str | None:
     if not line or len(line) > 40 or line.startswith("- "):
         return None
-    clean = re.sub(r"\s*&\s*", " and ", line.lower())
-    clean = re.sub(r"[^a-z ]", " ", clean)
-    clean = re.sub(r"\s+", " ", clean).strip()
-    return _HEADING_LOOKUP.get(clean)
+    clean = re.sub(r"[^a-z ]", "", line.lower()).strip()
+    if not clean:
+        return None
+    # Exact match first (e.g. "experience")
+    if clean in _HEADING_LOOKUP:
+        return _HEADING_LOOKUP[clean]
+    # Then allow a known alias to appear anywhere in the heading
+    # (e.g. "internship experience" contains "experience")
+    for alias, sec in sorted(_HEADING_LOOKUP.items(), key=lambda kv: -len(kv[0])):
+        if alias in clean:
+            return sec
+    return None
 
 
 def split_sections(text: str) -> dict[str, list[str]]:
@@ -213,36 +232,42 @@ _TITLE_WORDS = re.compile(
 
 def parse_experience(lines: list[str]) -> tuple[list[dict], float]:
     lines = [l.strip() for l in lines if l.strip()]
-    date_positions = [i for i, l in enumerate(lines) if DATE_RANGE.search(l)]
+
+    # A "header" line is one that names a role (contains a title word like "Intern",
+    # "Developer", "Engineer"...) and isn't a bullet point.
+    header_positions = [i for i, l in enumerate(lines) if _TITLE_WORDS.search(l) and not l.startswith("-")]
     entries, spans = [], []
 
-    for idx, pos in enumerate(date_positions):
-        start = pos
-        while start - 1 >= 0 and start - 1 not in date_positions and len(lines[start - 1].split()) <= 12:
-            start -= 1
-            if idx > 0 and start <= date_positions[idx - 1]:
-                break
-        next_pos = date_positions[idx + 1] if idx + 1 < len(date_positions) else len(lines)
-        header_lines = lines[start:pos + 1]
+    for idx, pos in enumerate(header_positions):
+        next_pos = header_positions[idx + 1] if idx + 1 < len(header_positions) else len(lines)
+        header_text = lines[pos]
         body_lines = [re.sub(r"^-\s*", "", l) for l in lines[pos + 1:next_pos] if l]
 
-        header_text = " ".join(header_lines)
-        title_match = _TITLE_WORDS.search(header_text)
+        # Pull out the role title (the part containing the title word)
         title = None
-        if title_match:
-            for part in re.split(r"\s+(?:at|@)\s+|\s*\|\s*|\s+-\s+", header_text):
-                if _TITLE_WORDS.search(part):
-                    title = DATE_RANGE.sub("", part).strip(" ,|-")
-                    break
+        for part in re.split(r"\s+(?:at|@)\s+|\s*\|\s*|\s+[-—]\s+", header_text):
+            if _TITLE_WORDS.search(part):
+                title = DATE_RANGE.sub("", part).strip(" ,|-")
+                break
+        if title is None:
+            title = header_text
 
-        m = DATE_RANGE.search(lines[pos])
-        s_idx, e_idx = _month_index(m.group(1)), _month_index(m.group(2))
-        if s_idx and e_idx and e_idx >= s_idx:
-            spans.append((s_idx, e_idx))
+        # A date range is a bonus, not a requirement — many resumes just say "Ongoing"
+        m = DATE_RANGE.search(header_text)
+        is_current = bool(re.search(_PRESENT, header_text, re.I)) or "ongoing" in header_text.lower()
+        date_label = None
+        if m:
+            date_label = f"{m.group(1)} - {m.group(2)}"
+            s_idx, e_idx = _month_index(m.group(1)), _month_index(m.group(2))
+            if s_idx and e_idx and e_idx >= s_idx:
+                spans.append((s_idx, e_idx))
+        elif is_current:
+            date_label = "Ongoing"
 
         entries.append({
             "title": title,
-            "date_range": f"{m.group(1)} - {m.group(2)}",
+            "date_range": date_label,
+            "is_current": is_current,
             "highlights": body_lines[:10],
             "technologies": [n for n, _ in find_skills(" ".join(body_lines))],
         })
@@ -253,54 +278,61 @@ def parse_experience(lines: list[str]) -> tuple[list[dict], float]:
 
 # ---------- 8. Education ----------
 _DEGREE_RE = re.compile(
-    r"\b(b\.?\s?tech|b\.?\s?e\.?|b\.?\s?sc|bca|b\.?\s?com|bba|bachelor(?:'s)?|"
-    r"m\.?\s?tech|m\.?\s?e\.?|m\.?\s?sc|mca|mba|master(?:'s)?|phd|doctorate|"
-    r"diploma|hsc|ssc|12th|10th)\b", re.I)
+    r"\b(b\.?\s?tech|b\.?\s?sc|bca|b\.?\s?com|bba|bachelors?|m\.?\s?tech|m\.?\s?sc|mca|mba|"
+    r"masters?|phd|diploma|hsc|ssc|12th|10th)\b", re.I)
+# "B.E." / "M.E." are common too, but checked separately (case-sensitive) because
+# lowercase "be" is also just the common English word "be" and would cause false matches.
+_DEGREE_RE_SHORT = re.compile(r"\bB\.?E\.?\b|\bM\.?E\.?\b")
+
+
+def _is_degree_line(line: str) -> bool:
+    return bool(_DEGREE_RE.search(line) or _DEGREE_RE_SHORT.search(line))
 _INSTITUTION_RE = re.compile(r"\b(university|college|institute|school|academy)\b", re.I)
 _YEAR_RE = re.compile(r"\b(?:19|20)\d{2}\b")
 
 
-def parse_education(lines: list[str], nlp) -> list[dict]:
-    entries = []
-    current = None
-
-    def finish_entry():
-        if current and current["degree"]:
-            entries.append(current.copy())
-
-    for raw in lines:
-        line = re.sub(r"^-\s*", "", raw.strip())
+def parse_education(lines: list[str], nlp=None) -> list[dict]:
+    raw = []
+    for ln in lines:
+        line = re.sub(r"^-\s*", "", ln.strip())
         if not line:
             continue
-        degree_match = _DEGREE_RE.search(line)
-        institution_match = _INSTITUTION_RE.search(line) or any(
-            entity.label_ == "ORG" for entity in nlp(line).ents
-        )
-        year_match = _YEAR_RE.search(line)
+        has_degree = _is_degree_line(line)
+        has_institution = bool(_INSTITUTION_RE.search(line))
+        if not (has_degree or has_institution):
+            continue
+        years = _YEAR_RE.findall(line)
+        raw.append({
+            "has_degree": has_degree,
+            "has_institution": has_institution,
+            "degree": line if has_degree else None,
+            "institution": line if has_institution and not has_degree else None,
+            "year": years[-1] if years else None,
+        })
 
-        if degree_match and current and current["degree"]:
-            finish_entry()
-            current = None
-        if current is None:
-            current = {"degree": None, "institution": None, "year": None}
-
-        if degree_match:
-            current["degree"] = line
-        elif institution_match:
-            if current["institution"]:
-                finish_entry()
-                current = {"degree": None, "institution": None, "year": None}
-            current["institution"] = line
-        elif year_match:
-            current["year"] = year_match.group()
-        elif current["degree"] and not current["institution"]:
-            current["institution"] = line
-
-        if year_match:
-            current["year"] = year_match.group()
-
-    finish_entry()
-    return entries[:6]
+    # A degree and its institution might be split across two lines, in EITHER order
+    # (institution-then-degree, or degree-then-institution). Check both neighbors.
+    merged, used = [], set()
+    for i, e in enumerate(raw):
+        if i in used:
+            continue
+        if e["has_degree"] and not e["has_institution"]:
+            institution, year = None, e["year"]
+            for j in (i - 1, i + 1):
+                if 0 <= j < len(raw) and j not in used and raw[j]["institution"]:
+                    institution = raw[j]["institution"]
+                    year = year or raw[j]["year"]
+                    used.add(j)
+                    break
+            merged.append({"degree": e["degree"], "institution": institution, "year": year})
+            used.add(i)
+        elif e["has_institution"] and not e["has_degree"]:
+            merged.append({"degree": None, "institution": e["institution"], "year": e["year"]})
+            used.add(i)
+        else:  # a single line that has both
+            merged.append({"degree": e["degree"], "institution": e["institution"], "year": e["year"]})
+            used.add(i)
+    return merged[:6]
 
 
 # ---------- 9. Projects ----------
