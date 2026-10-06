@@ -543,6 +543,34 @@ body {
 .rs-ats-fail .rs-ats-icon { color: #b3261e; }
 .rs-ats-label { font-weight: 600; font-size: 0.9rem; }
 
+/* ---------- Account profile ---------- */
+.profile-page { max-width: 900px; margin: 0 auto; }
+.profile-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  margin-bottom: 18px;
+}
+.profile-card h2 { margin: 0 0 18px; font-size: 1.1rem; }
+.profile-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 18px;
+}
+.profile-meta > div { padding: 12px; background: var(--bg); border-radius: 8px; }
+.profile-meta dt { color: var(--text-soft); font-size: 0.78rem; font-weight: 600; }
+.profile-meta dd { margin: 4px 0 0; font-weight: 600; text-transform: capitalize; }
+.profile-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.profile-actions { display: flex; justify-content: flex-end; }
+.profile-submit { width: auto; min-width: 140px; }
+.profile-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
 @media (max-width: 560px) {
   .rs-overall { flex-direction: column; align-items: flex-start; }
+  .profile-card { padding: 16px; }
+  .profile-meta { grid-template-columns: 1fr; }
+  .profile-form-grid { grid-template-columns: 1fr; gap: 0; }
+  .profile-submit { width: 100%; }
 }

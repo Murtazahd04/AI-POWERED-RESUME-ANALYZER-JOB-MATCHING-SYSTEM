@@ -1,7 +1,13 @@
 import re
 from datetime import datetime
 from typing import Annotated, Literal
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+
+
+def _validate_password_strength(value: str) -> str:
+    if not re.search(r"[A-Za-z]", value) or not re.search(r"\d", value):
+        raise ValueError("Password must contain at least one letter and one number.")
+    return value
 
 
 class RegisterRequest(BaseModel):
@@ -12,9 +18,7 @@ class RegisterRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def _password_strength(cls, v: str) -> str:
-        if not re.search(r"[A-Za-z]", v) or not re.search(r"\d", v):
-            raise ValueError("Password must contain at least one letter and one number.")
-        return v
+        return _validate_password_strength(v)
 
 
 class LoginRequest(BaseModel):
@@ -28,6 +32,36 @@ class UserOut(BaseModel):
     email: EmailStr
     role: str
     created_at: datetime
+
+
+class ProfileUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, min_length=2, max_length=80)
+    email: EmailStr | None = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def _trim_name(cls, value: str | None) -> str | None:
+        return value.strip() if isinstance(value, str) else value
+
+    @model_validator(mode="after")
+    def _require_profile_field(self):
+        if self.name is None and self.email is None:
+            raise ValueError("Provide a name or email address to update.")
+        return self
+
+
+class PasswordChangeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=72)
+
+    @field_validator("new_password")
+    @classmethod
+    def _password_strength(cls, value: str) -> str:
+        return _validate_password_strength(value)
 
 
 class TokenResponse(BaseModel):

@@ -7,13 +7,16 @@ const LINKS = [
   { to: "/resume-score", label: "Resume Score", icon: "◉" },
   { to: "/job-matching", label: "Job Matching", icon: "○" },
   { to: "/skill-gap", label: "Skill Gap", icon: "◇" },
-  { to: "/profile", label: "Profile", icon: "◎", soon: true },
+  { to: "/profile", label: "Profile", icon: "◎" },
 ];
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const initials = (user?.name || "?").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  const links = user?.role === "admin"
+    ? [...LINKS, { to: "/admin/analytics", label: "Admin Insights", icon: "▤" }]
+    : LINKS;
 
   return (
     <div className="shell">
@@ -22,7 +25,7 @@ export default function Layout({ children }) {
           Resume<span style={{ color: "var(--primary)" }}>AI</span>
         </div>
         <nav>
-          {LINKS.map((l) =>
+          {links.map((l) =>
             l.soon ? (
               // Not a link yet, so it can never look "active".
               <div key={l.to} className="sidebar-link sidebar-link-soon">

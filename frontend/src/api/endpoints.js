@@ -7,6 +7,11 @@ export const authApi = {
   me: () => api.get("/api/auth/me").then((r) => r.data),
 };
 
+export const profileApi = {
+  update: (data) => api.patch("/api/auth/me", data).then((r) => r.data),
+  changePassword: (data) => api.post("/api/auth/me/password", data).then((r) => r.data),
+};
+
 export const resumeApi = {
   // FormData is how browsers send files. onProgress lets us show a progress bar.
   upload: (file, onProgress) => {

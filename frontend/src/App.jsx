@@ -7,11 +7,11 @@ import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
 import ResumesPage from "./pages/ResumesPage";
 import ResumeDetailPage from "./pages/ResumeDetailPage";
-import JobMatchingPage from "./pages/JobMatchingPage";
+import JobMatchingPage from "./pages/Jobmatchingpage";
 import ResumeScorePage from "./pages/ResumeScorePage";
 import SkillGapPage from "./pages/SkillGapPage";
-
- 
+import ProfilePage from "./pages/ProfilePage";
+import AdminAccessPage from "./pages/AdminAccessPage";
 function RootRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -45,6 +45,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Layout><ResumeDetailPage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Layout><ProfilePage /></Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <Layout><AdminAccessPage /></Layout>
           </ProtectedRoute>
         }
       />
