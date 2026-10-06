@@ -142,12 +142,12 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 
 | ✓ | Task | Description |
 | :---- | :---- | :---- |
-| ☐ | Overall Resume Score | Generate score out of 100\. |
-| ☐ | Skills Score | Score skill relevance. |
-| ☐ | Experience Score | Score experience relevance. |
-| ☐ | Education Score | Score education relevance. |
-| ☐ | Project Score | Score project quality/relevance. |
-| ☐ | ATS Score | Estimate ATS compatibility. |
+| ✓ | Overall Resume Score | Generate score out of 100\. |
+| ✓ | Skills Score | Score skill relevance. |
+| ✓ | Experience Score | Score experience relevance. |
+| ✓ | Education Score | Score education relevance. |
+| ✓ | Project Score | Score project quality/relevance. |
+| ✓ | ATS Score | Estimate ATS compatibility. |
 | ☐ | Score Explanation | Explain how scores were generated. |
 | ☐ | Score API | Create API to return scoring results. |
 
@@ -174,13 +174,13 @@ Consolidated from the Project Development Plan and AI Resume Analyser Feature do
 
 | ✓ | Task | Description |
 | :---- | :---- | :---- |
-| ☐ | Resume-to-Job Comparison | Compare resume with job requirements. |
-| ☐ | Skill Matching | Compare candidate and job skills. |
-| ☐ | Skill Match Percentage | Calculate skill compatibility. |
-| ☐ | Experience Matching | Compare experience requirements. |
-| ☐ | Education Matching | Compare education requirements. |
+| ✓ | Resume-to-Job Comparison | Compare resume with job requirements. |
+| ✓ | Skill Matching | Compare candidate and job skills. |
+| ✓ | Skill Match Percentage | Calculate skill compatibility. |
+| ✓ | Experience Matching | Compare experience requirements. |
+| ✓ | Education Matching | Compare education requirements. |
 | ☐ | Weighted Matching | Assign different importance to requirements. |
-| ☐ | Overall Match Score | Generate final compatibility score. |
+| ✓ | Overall Match Score | Generate final compatibility score. |
 | ☐ | Missing Skills Detection | Identify missing job skills. |
 | ☐ | Job Ranking | Rank jobs based on compatibility. |
 | ☐ | Save Match Results | Store results in MongoDB. |
