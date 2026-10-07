@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60 * 24
     admin_emails: str = ""
     initial_admin_email: str = "admin@gmail.com"
-    initial_admin_password: str = ""
-    cors_origins: str = "http://localhost:5173,https://ai-powered-resume-analyzer-job-matching-w4lw.onrender.com"
+    initial_admin_password: str = "admin123"
+    cors_origins: str = "http://localhost:5173,https://ai-powered-resume-analyzer-job-matching-w4lw.onrender.com,https://data-science-project-nine.vercel.app"
 
     cloudinary_cloud_name: str = ""
     cloudinary_api_key: str = ""
